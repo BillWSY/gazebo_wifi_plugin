@@ -6,32 +6,34 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/sensors/sensors.hh>
 
-namespace gazebo
+namespace gazebo {
+
+/// \brief An example plugin for a contact sensor.
+class WifiReceiverPlugin : public SensorPlugin
 {
-  /// \brief An example plugin for a contact sensor.
-  class WifiReceiverPlugin : public SensorPlugin
-  {
-    /// \brief Constructor.
-    public: WifiReceiverPlugin();
+  /// \brief Constructor.
+  public: WifiReceiverPlugin();
 
-    /// \brief Destructor.
-    public: virtual ~WifiReceiverPlugin();
+  /// \brief Destructor.
+  public: virtual ~WifiReceiverPlugin();
 
-    /// \brief Load the sensor plugin.
-    /// \param[in] _sensor Pointer to the sensor that loaded this plugin.
-    /// \param[in] _sdf SDF element that describes the plugin.
-    public: virtual void Load(sensors::SensorPtr _sensor, sdf::ElementPtr _sdf);
+  /// \brief Load the sensor plugin.
+  /// \param[in] sensor Pointer to the sensor that loaded this plugin.
+  /// \param[in] sdf SDF element that describes the plugin.
+  public: virtual void Load(sensors::SensorPtr sensor, sdf::ElementPtr sdf);
 
-    /// \brief Callback that receives the contact sensor's update signal.
-    // private: virtual void OnUpdate();
-    private: virtual bool UpdateImpl();
+  /// \brief Callback that receives the contact sensor's update signal.
+  // private: virtual void OnUpdate();
+  private: virtual bool UpdateImpl();
 
-    /// \brief Pointer to the contact sensor
-    private: sensors::WirelessReceiverPtr parentSensor;
+  /// \brief Pointer to the contact sensor
+  private: sensors::WirelessReceiverPtr parent_sensor_;
 
-    /// \brief Connection that maintains a link between the contact sensor's
-    /// updated signal and the OnUpdate callback.
-    private: event::ConnectionPtr updateConnection;
-  };
-}
+  /// \brief Connection that maintains a link between the contact sensor's
+  /// updated signal and the OnUpdate callback.
+  private: event::ConnectionPtr update_connection_;
+};
+
+}  // namespace gazebo
+
 #endif

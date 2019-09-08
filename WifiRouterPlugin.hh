@@ -6,26 +6,27 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/sensors/sensors.hh>
 
-namespace gazebo
+namespace gazebo {
+
+class WifiRouterPlugin : public SensorPlugin
 {
-  class WifiRouterPlugin : public SensorPlugin
-  {
-    /// \brief Constructor.
-    public: WifiRouterPlugin();
+  /// \brief Constructor.
+  public: WifiRouterPlugin();
 
-    /// \brief Destructor.
-    public: virtual ~WifiRouterPlugin();
+  /// \brief Destructor.
+  public: virtual ~WifiRouterPlugin();
 
-    /// \brief Load the sensor plugin.
-    /// \param[in] _sensor Pointer to the sensor that loaded this plugin.
-    /// \param[in] _sdf SDF element that describes the plugin.
-    public: virtual void Load(sensors::SensorPtr _sensor, sdf::ElementPtr _sdf);
+  /// \brief Load the sensor plugin.
+  /// \param[in] sensor Pointer to the sensor that loaded this plugin.
+  /// \param[in] sdf SDF element that describes the plugin.
+  public: virtual void Load(sensors::SensorPtr sensor, sdf::ElementPtr sdf);
 
-    private: virtual void OnUpdate();
+  private: virtual void OnUpdate();
 
-    private: sensors::WirelessTransmitterPtr parentSensor;
+  private: sensors::WirelessTransmitterPtr parent_sensor_;
 
-    private: event::ConnectionPtr updateConnection;
-  };
-}
+  private: event::ConnectionPtr update_connection_;
+};
+
+}  // namespace gazebo
 #endif

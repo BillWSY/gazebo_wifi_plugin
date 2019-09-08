@@ -41,7 +41,7 @@
             <gain>2.6</gain>
           </transceiver>
         </sensor>
-	      
+
 
       </link>
     </model>
@@ -80,7 +80,7 @@
             <sensitivity>-90.0</sensitivity>
           </transceiver>
         </sensor>
-        
+
 
       </link>
     </model>

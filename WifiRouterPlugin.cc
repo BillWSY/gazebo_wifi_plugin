@@ -11,35 +11,32 @@ WifiRouterPlugin::~WifiRouterPlugin()
 {
 }
 
-void WifiRouterPlugin::Load(sensors::SensorPtr _sensor, sdf::ElementPtr /*_sdf*/)
-{
+void WifiRouterPlugin::Load(
+    sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
   // Get the parent sensor.
-  this->parentSensor =
-    std::dynamic_pointer_cast<sensors::WirelessTransmitter>(_sensor);
+  this->parent_sensor_ =
+      std::dynamic_pointer_cast<sensors::WirelessTransmitter>(sensor);
 
   // Make sure the parent sensor is valid.
-  if (!this->parentSensor)
-  {
+  if (!this->parent_sensor_) {
     gzerr << "WifiRouterPlugin requires a Wireless Transmitter Sensor.\n";
     return;
   }
 
   // Connect to the sensor update event.
-  this->updateConnection = this->parentSensor->ConnectUpdated(
+  this->update_connection_ = this->parent_sensor_->ConnectUpdated(
       std::bind(&WifiRouterPlugin::OnUpdate, this));
 
   // Make sure the parent sensor is active.
-  this->parentSensor->SetActive(true);
+  this->parent_sensor_->SetActive(true);
 
   std::string essid;
-  essid = this->parentSensor->GetESSID ();
+  essid = this->parent_sensor_->ESSID ();
 
   std::cout << " ESSID:" << essid << "\n";
 }
 
-void WifiRouterPlugin::OnUpdate()
-{
+void WifiRouterPlugin::OnUpdate() {
   std::string essid;
-  essid = this->parentSensor->GetESSID ();
-  // std::cout << " ESSID:" << essid << "\n";
+  essid = this->parent_sensor_->ESSID ();
 }

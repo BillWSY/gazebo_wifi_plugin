@@ -1,7 +1,7 @@
 #include "WifiReceiverPlugin.hh"
+
 #include "gazebo/sensors/SensorFactory.hh"
 #include "gazebo/sensors/SensorManager.hh"
-#include "gazebo/math/Rand.hh"
 #include "gazebo/msgs/msgs.hh"
 #include "gazebo/transport/Node.hh"
 #include "gazebo/transport/Publisher.hh"
@@ -11,39 +11,33 @@ using namespace gazebo;
 using namespace sensors;
 GZ_REGISTER_SENSOR_PLUGIN(WifiReceiverPlugin)
 
-WifiReceiverPlugin::WifiReceiverPlugin() : SensorPlugin()
-{
+WifiReceiverPlugin::WifiReceiverPlugin() : SensorPlugin() {
 }
 
-WifiReceiverPlugin::~WifiReceiverPlugin()
-{
+WifiReceiverPlugin::~WifiReceiverPlugin() {
 }
 
-void WifiReceiverPlugin::Load(sensors::SensorPtr _sensor, sdf::ElementPtr /*_sdf*/)
-{
+void WifiReceiverPlugin::Load(
+    sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
   // Get the parent sensor.
-  this->parentSensor =
-    std::dynamic_pointer_cast<sensors::WirelessReceiver>(_sensor);
+  this->parent_sensor_ =
+      std::dynamic_pointer_cast<sensors::WirelessReceiver>(sensor);
 
   // Make sure the parent sensor is valid.
-  if (!this->parentSensor)
-  {
+  if (!this->parent_sensor_) {
     gzerr << "WifiReceiverPlugin requires a Wireless Transmitter Sensor.\n";
     return;
   }
 
   // Connect to the sensor update event.
-  this->updateConnection = this->parentSensor->ConnectUpdated(
+  this->update_connection_ = this->parent_sensor_->ConnectUpdated(
       std::bind(&WifiReceiverPlugin::UpdateImpl, this));
 
   // Make sure the parent sensor is active.
-  this->parentSensor->SetActive(true);
-  // this->parentSensor->SetPose(ignition::math::Pose3d (100, 100, 100, 0, 0, 0));
-
+  this->parent_sensor_->SetActive(true);
 }
 
-bool WifiReceiverPlugin::UpdateImpl()
-{
+bool WifiReceiverPlugin::UpdateImpl() {
   std::string txEssid;
   // msgs::WirelessNodes msg;
   double rxPower;
@@ -52,27 +46,27 @@ bool WifiReceiverPlugin::UpdateImpl()
   sensors::SensorPtr sensor_ptr;
   sensor_ptr = SensorManager::Instance()->GetSensor("wirelessTransmitter");
 
-  sensors::WirelessTransmitterPtr transmitSensor;
-  transmitSensor = std::dynamic_pointer_cast<sensors::WirelessTransmitter>(sensor_ptr);
+  sensors::WirelessTransmitterPtr transmit_sensor;
+  transmit_sensor = std::dynamic_pointer_cast<sensors::WirelessTransmitter>(
+      sensor_ptr);
 
-
-  std::cout << "Connected to: " + transmitSensor->GetESSID() + "\n";
+  std::cout << "Connected to: " + transmit_sensor->ESSID() + "\n";
   double signal_strength;
-  signal_strength = transmitSensor->SignalStrength(this->parentSensor->Pose(), this->parentSensor->Gain());
+  signal_strength = transmit_sensor->SignalStrength(
+      this->parent_sensor_->Pose(), this->parent_sensor_->Gain());
   std::cout << "Signal strengh: " << signal_strength << "\n";
 
-  math::Pose myPos = this->parentSensor->Pose();
+  ignition::math::Pose3d myPos = this->parent_sensor_->Pose();
   std::cout << "Pose: " << myPos << "\n";
-
 
   /*for (Sensor_V::iterator it = sensors.begin(); it != sensors.end(); ++it)
   {
     if ((*it)->GetType() == "wireless_transmitter")
     {
-      
+
 
       sensors::WirelessTransmitterPtr parentSensor;
-      this->parentSensor = (*it)->GetSensor("wireless_transmitter");
+      this->parent_sensor_ = (*it)->GetSensor("wireless_transmitter");
       boost::shared_ptr<gazebo::sensors::WirelessTransmitter> transmitter =
            boost::static_pointer_cast<WirelessTransmitter>(*it);
 
@@ -99,5 +93,4 @@ bool WifiReceiverPlugin::UpdateImpl()
 
 
   return true;
-      
 }
