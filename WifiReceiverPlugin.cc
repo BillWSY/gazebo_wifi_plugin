@@ -38,59 +38,33 @@ void WifiReceiverPlugin::Load(
 }
 
 bool WifiReceiverPlugin::UpdateImpl() {
-  std::string txEssid;
-  // msgs::WirelessNodes msg;
-  double rxPower;
-  double txFreq;
+  Sensor_V sensors = SensorManager::Instance()->GetSensors();
+  for (Sensor_V::iterator it = sensors.begin(); it != sensors.end(); ++it) {
+    if ((*it)->Type() == "wireless_transmitter") {
+      sensors::WirelessTransmitterPtr transmit_sensor =
+          std::dynamic_pointer_cast<sensors::WirelessTransmitter>(*it);
 
-  sensors::SensorPtr sensor_ptr;
-  sensor_ptr = SensorManager::Instance()->GetSensor("wirelessTransmitter");
+      std::string txEssid;
 
-  sensors::WirelessTransmitterPtr transmit_sensor;
-  transmit_sensor = std::dynamic_pointer_cast<sensors::WirelessTransmitter>(
-      sensor_ptr);
+      double signal_strength = transmit_sensor->SignalStrength(
+          this->parent_sensor_->Pose(), this->parent_sensor_->Gain());
+      double tx_freq = transmit_sensor->Freq();
+      std::string tx_essid = transmit_sensor->ESSID();
 
-  std::cout << "Connected to: " + transmit_sensor->ESSID() + "\n";
-  double signal_strength;
-  signal_strength = transmit_sensor->SignalStrength(
-      this->parent_sensor_->Pose(), this->parent_sensor_->Gain());
-  std::cout << "Signal strengh: " << signal_strength << "\n";
-
-  ignition::math::Pose3d myPos = this->parent_sensor_->Pose();
-  std::cout << "Pose: " << myPos << "\n";
-
-  /*for (Sensor_V::iterator it = sensors.begin(); it != sensors.end(); ++it)
-  {
-    if ((*it)->GetType() == "wireless_transmitter")
-    {
-
-
-      sensors::WirelessTransmitterPtr parentSensor;
-      this->parent_sensor_ = (*it)->GetSensor("wireless_transmitter");
-      boost::shared_ptr<gazebo::sensors::WirelessTransmitter> transmitter =
-           boost::static_pointer_cast<WirelessTransmitter>(*it);
-
-      txFreq = transmitter->GetFreq();
-      rxPower = transmitter->GetSignalStrength(myPos, this->GetGain());
+      std::cout << "Signal strengh: " << signal_strength << std::endl;
+      std::cout << "TX frequency: " << tx_freq << std::endl;
+      std::cout << "ESSID: " << tx_essid << std::endl;
 
       // Discard if the frequency received is out of our frequency range,
       // or if the received signal strengh is lower than the sensivity
-      if ((txFreq < this->GetMinFreqFiltered()) ||
-           (txFreq > this->GetMaxFreqFiltered()) ||
-           (rxPower < this->GetSensitivity()))
-      {
+      if ((tx_freq < this->parent_sensor_->MinFreqFiltered())
+          || (tx_freq > this->parent_sensor_->MaxFreqFiltered())
+          || (signal_strength < this->parent_sensor_->Sensitivity())) {
         continue;
       }
 
-      txEssid = transmitter->GetESSID();
-
-      msgs::WirelessNode *wirelessNode = msg.add_node();
-      wirelessNode->set_essid(txEssid);
-      wirelessNode->set_frequency(txFreq);
-      std::cout << txEssid << "\n";
+      // TODO(shengye): Add this information to a ROS message and publish it.
     }
-  }*/
-
-
+  }
   return true;
 }
