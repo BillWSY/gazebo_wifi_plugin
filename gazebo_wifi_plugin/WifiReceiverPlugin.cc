@@ -1,5 +1,8 @@
 #include "WifiReceiverPlugin.hh"
 
+#include <ros/ros.h>
+#include "std_msgs/String.h"
+
 #include "gazebo/sensors/SensorFactory.hh"
 #include "gazebo/sensors/SensorManager.hh"
 #include "gazebo/msgs/msgs.hh"
@@ -35,6 +38,11 @@ void WifiReceiverPlugin::Load(
 
   // Make sure the parent sensor is active.
   this->parent_sensor_->SetActive(true);
+
+
+  ros::NodeHandle node_handle;
+  this->sensor_pub_ = node_handle.advertise<std_msgs::String>(
+      this->parent_sensor_->Name() + "/essid", 1000);
 }
 
 bool WifiReceiverPlugin::UpdateImpl() {
@@ -54,6 +62,10 @@ bool WifiReceiverPlugin::UpdateImpl() {
       std::cout << "Signal strengh: " << signal_strength << std::endl;
       std::cout << "TX frequency: " << tx_freq << std::endl;
       std::cout << "ESSID: " << tx_essid << std::endl;
+
+      std_msgs::String msg;
+      msg.data = tx_essid;
+      sensor_pub_.publish(msg);
 
       // Discard if the frequency received is out of our frequency range,
       // or if the received signal strengh is lower than the sensivity

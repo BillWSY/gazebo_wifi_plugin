@@ -5,6 +5,7 @@
 
 #include <gazebo/gazebo.hh>
 #include <gazebo/sensors/sensors.hh>
+#include <ros/ros.h>
 
 namespace gazebo {
 
@@ -32,6 +33,8 @@ class WifiReceiverPlugin : public SensorPlugin
   /// \brief Connection that maintains a link between the contact sensor's
   /// updated signal and the OnUpdate callback.
   private: event::ConnectionPtr update_connection_;
+
+  private: ros::Publisher sensor_pub_;
 };
 
 }  // namespace gazebo
