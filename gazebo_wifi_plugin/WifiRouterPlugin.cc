@@ -32,8 +32,6 @@ void WifiRouterPlugin::Load(
 
   std::string essid;
   essid = this->parent_sensor_->ESSID ();
-
-  std::cout << " ESSID:" << essid << "\n";
 }
 
 void WifiRouterPlugin::OnUpdate() {

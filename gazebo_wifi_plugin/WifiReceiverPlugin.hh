@@ -34,7 +34,10 @@ class WifiReceiverPlugin : public SensorPlugin
   /// updated signal and the OnUpdate callback.
   private: event::ConnectionPtr update_connection_;
 
-  private: ros::Publisher sensor_pub_;
+  private: ros::Publisher receiver_pub_;
+  private: ros::Publisher receiver_oracle_pub_;
+
+  private: int seq_;
 };
 
 }  // namespace gazebo

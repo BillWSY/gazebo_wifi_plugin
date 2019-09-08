@@ -1,7 +1,10 @@
 #include "WifiReceiverPlugin.hh"
 
 #include <ros/ros.h>
-#include "std_msgs/String.h"
+#include "gazebo_wifi_plugin/ReceiverOracleReport.h"
+#include "gazebo_wifi_plugin/ReceiverOracleRouterInfo.h"
+#include "gazebo_wifi_plugin/ReceiverReport.h"
+#include "gazebo_wifi_plugin/ReceiverRouterInfo.h"
 
 #include "gazebo/sensors/SensorFactory.hh"
 #include "gazebo/sensors/SensorManager.hh"
@@ -41,31 +44,59 @@ void WifiReceiverPlugin::Load(
 
 
   ros::NodeHandle node_handle;
-  this->sensor_pub_ = node_handle.advertise<std_msgs::String>(
-      this->parent_sensor_->Name() + "/essid", 1000);
+  this->receiver_pub_ =
+      node_handle.advertise<gazebo_wifi_plugin::ReceiverReport>(
+      this->parent_sensor_->Name() + "/receiver_report", 1000);
+
+  this->receiver_oracle_pub_ =
+      node_handle.advertise<gazebo_wifi_plugin::ReceiverOracleReport>(
+      this->parent_sensor_->Name() + "/receiver_oracle_report", 1000);
 }
 
 bool WifiReceiverPlugin::UpdateImpl() {
+  gazebo_wifi_plugin::ReceiverReport receiver_report_msg;
+  gazebo_wifi_plugin::ReceiverOracleReport oracle_report_msg;
+
+  this->seq_ ++;
+
+  receiver_report_msg.header.stamp = ros::Time::now();
+  receiver_report_msg.header.frame_id = "base_link";
+  receiver_report_msg.header.seq = this->seq_;
+
+  oracle_report_msg.header = receiver_report_msg.header;
+
   Sensor_V sensors = SensorManager::Instance()->GetSensors();
+  const ignition::math::Pose3d this_pose = this->parent_sensor_->Pose();
+
   for (Sensor_V::iterator it = sensors.begin(); it != sensors.end(); ++it) {
     if ((*it)->Type() == "wireless_transmitter") {
       sensors::WirelessTransmitterPtr transmit_sensor =
           std::dynamic_pointer_cast<sensors::WirelessTransmitter>(*it);
 
-      std::string txEssid;
-
-      double signal_strength = transmit_sensor->SignalStrength(
+      const double signal_strength = transmit_sensor->SignalStrength(
           this->parent_sensor_->Pose(), this->parent_sensor_->Gain());
-      double tx_freq = transmit_sensor->Freq();
-      std::string tx_essid = transmit_sensor->ESSID();
+      const double tx_freq = transmit_sensor->Freq();
+      const std::string tx_essid = transmit_sensor->ESSID();
 
-      std::cout << "Signal strengh: " << signal_strength << std::endl;
-      std::cout << "TX frequency: " << tx_freq << std::endl;
-      std::cout << "ESSID: " << tx_essid << std::endl;
+      // Save oracle router info.
+      gazebo_wifi_plugin::ReceiverOracleRouterInfo oracle_info;
+      oracle_info.essid = tx_essid;
+      oracle_info.frequency = tx_freq;
+      oracle_info.gain = transmit_sensor->Gain();
+      oracle_info.power = transmit_sensor->Power();
 
-      std_msgs::String msg;
-      msg.data = tx_essid;
-      sensor_pub_.publish(msg);
+      const ignition::math::Pose3d rel_pose =
+          transmit_sensor->Pose() - this_pose;
+      oracle_info.pose.position.x = rel_pose.Pos().X();
+      oracle_info.pose.position.y = rel_pose.Pos().Y();
+      oracle_info.pose.position.z = rel_pose.Pos().Z();
+
+      oracle_info.pose.orientation.x = rel_pose.Rot().X();
+      oracle_info.pose.orientation.y = rel_pose.Rot().Y();
+      oracle_info.pose.orientation.z = rel_pose.Rot().Z();
+      oracle_info.pose.orientation.w = rel_pose.Rot().W();
+
+      oracle_report_msg.router_info.push_back(oracle_info);
 
       // Discard if the frequency received is out of our frequency range,
       // or if the received signal strengh is lower than the sensivity
@@ -75,8 +106,16 @@ bool WifiReceiverPlugin::UpdateImpl() {
         continue;
       }
 
-      // TODO(shengye): Add this information to a ROS message and publish it.
+      // Save router info.
+      gazebo_wifi_plugin::ReceiverRouterInfo router_info;
+      router_info.signal_strength = signal_strength;
+      router_info.frequency = tx_freq;
+      router_info.essid = tx_essid;
+      receiver_report_msg.router_info.push_back(router_info);
     }
   }
+
+  receiver_pub_.publish(receiver_report_msg);
+  receiver_oracle_pub_.publish(oracle_report_msg);
   return true;
 }
