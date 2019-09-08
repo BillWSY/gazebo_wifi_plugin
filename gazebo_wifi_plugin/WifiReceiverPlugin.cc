@@ -53,6 +53,15 @@ void WifiReceiverPlugin::Load(
       this->parent_sensor_->Name() + "/receiver_oracle_report", 1000);
 }
 
+static ignition::math::Pose3d GetWorldPose(const sensors::SensorPtr sensor) {
+  gazebo::physics::WorldPtr world = physics::get_world(
+      sensor->WorldName());
+  boost::weak_ptr<physics::Link> parent =
+      boost::dynamic_pointer_cast<physics::Link>(
+      world->EntityByName(sensor->ParentName()));
+  return sensor->Pose() + parent.lock()->WorldPose();
+}
+
 bool WifiReceiverPlugin::UpdateImpl() {
   gazebo_wifi_plugin::ReceiverReport receiver_report_msg;
   gazebo_wifi_plugin::ReceiverOracleReport oracle_report_msg;
@@ -66,7 +75,7 @@ bool WifiReceiverPlugin::UpdateImpl() {
   oracle_report_msg.header = receiver_report_msg.header;
 
   Sensor_V sensors = SensorManager::Instance()->GetSensors();
-  const ignition::math::Pose3d this_pose = this->parent_sensor_->Pose();
+  const ignition::math::Pose3d this_pose = GetWorldPose(this->parent_sensor_);
 
   for (Sensor_V::iterator it = sensors.begin(); it != sensors.end(); ++it) {
     if ((*it)->Type() == "wireless_transmitter") {
@@ -74,7 +83,7 @@ bool WifiReceiverPlugin::UpdateImpl() {
           std::dynamic_pointer_cast<sensors::WirelessTransmitter>(*it);
 
       const double signal_strength = transmit_sensor->SignalStrength(
-          this->parent_sensor_->Pose(), this->parent_sensor_->Gain());
+          this_pose, this->parent_sensor_->Gain());
       const double tx_freq = transmit_sensor->Freq();
       const std::string tx_essid = transmit_sensor->ESSID();
 
@@ -86,7 +95,7 @@ bool WifiReceiverPlugin::UpdateImpl() {
       oracle_info.power = transmit_sensor->Power();
 
       const ignition::math::Pose3d rel_pose =
-          transmit_sensor->Pose() - this_pose;
+          GetWorldPose(transmit_sensor) - this_pose;
       oracle_info.pose.position.x = rel_pose.Pos().X();
       oracle_info.pose.position.y = rel_pose.Pos().Y();
       oracle_info.pose.position.z = rel_pose.Pos().Z();

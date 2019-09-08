@@ -96,5 +96,41 @@
 
       </link>
     </model>
+
+    <model name="box3">
+      <link name="link">
+        <pose>0 0 0.5 0 0 0</pose>
+
+        <collision name="box_collision">
+          <geometry>
+            <box>
+              <size>0.1 0.1 0.1</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.1 0.1 0.1</size>
+            </box>
+          </geometry>
+        </visual>
+
+        <sensor name="cogrob_wireless_transmitter" type="wireless_transmitter">
+          <plugin name="wifi_router_plugin" filename="libwifirouter.so"/>
+          <always_on>1</always_on>
+          <update_rate>1</update_rate>
+          <visualize>true</visualize>
+          <transceiver>
+            <essid>CogRob_3</essid>
+            <frequency>2440.0</frequency>
+            <power>10.0</power>
+            <gain>3</gain>
+          </transceiver>
+        </sensor>
+
+      </link>
+    </model>
   </world>
 </sdf>
